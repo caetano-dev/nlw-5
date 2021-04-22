@@ -2,7 +2,7 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Image from "next/image";
 import Link from "next/link";
-import { GetStaticPaths, GetStaticProps } from "next";
+import { GetStaticProps, GetStaticPaths } from "next";
 
 import { api } from "../../services/api";
 import { convertDurationToTimeString } from "../../utils/convertDurationToTimeString";
@@ -15,10 +15,10 @@ type Episode = {
   thumbnail: string;
   members: string;
   duration: number;
-  durationAsString: string;
-  url: string;
-  publishedAt: string;
   description: string;
+  durationAsString: string;
+  publishedAt: string;
+  url: string;
 };
 
 type EpisodeProps = {
@@ -30,10 +30,11 @@ export default function Episode({ episode }: EpisodeProps) {
     <div className={styles.episode}>
       <div className={styles.thumbnailContainer}>
         <Link href="/">
-          <button type="button">
+          <button>
             <img src="/arrow-left.svg" alt="Voltar" />
           </button>
         </Link>
+
         <Image
           width={700}
           height={160}
@@ -61,8 +62,24 @@ export default function Episode({ episode }: EpisodeProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
+  const { data } = await api.get("episodes", {
+    params: {
+      _limit: 2,
+      _sort: "published_at",
+      _order: "desc",
+    },
+  });
+
+  const paths = data.map((episode) => {
+    return {
+      params: {
+        slug: episode.id,
+      },
+    };
+  });
+
   return {
-    paths: [],
+    paths,
     fallback: "blocking",
   };
 };
@@ -84,10 +101,11 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
     description: data.description,
     url: data.file.url,
   };
+
   return {
     props: {
       episode,
     },
-    revalidate: 60 * 60 * 24,
+    revalidate: 60 * 60 * 24, // 24 hours
   };
 };

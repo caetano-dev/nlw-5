@@ -1,11 +1,12 @@
+import { useContext } from "react";
 import { GetStaticProps } from "next";
-import Image from "next/image";
 import Link from "next/link";
-import { format, parseISO } from "date-fns";
+import Image from "next/image";
+import { format, parseISO } from "date-fns"; //parseISO pega uma string e converte para um Date do JS
 import ptBR from "date-fns/locale/pt-BR";
 import { api } from "../services/api";
+import { PlayerContext } from "../contexts/PlayerContext";
 import { convertDurationToTimeString } from "../utils/convertDurationToTimeString";
-
 import styles from "./home.module.scss";
 
 type Episode = {
@@ -15,20 +16,23 @@ type Episode = {
   members: string;
   duration: number;
   durationAsString: string;
-  url: string;
   publishedAt: string;
+  url: string;
 };
 
 type HomeProps = {
-  latestEpisodes: Episode[]; // Mesma coisa de: Array<Episode>
-  allEpisodes: Episode[]; // Mesma coisa de: Array<Episode>
+  latestEpisodes: Episode[];
+  allEpisodes: Episode[];
 };
 
 export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
+  const { play } = useContext(PlayerContext);
+
   return (
     <div className={styles.homepage}>
       <section className={styles.latestEpisodes}>
         <h2>Últimos lançamentos</h2>
+
         <ul>
           {latestEpisodes.map((episode) => {
             return (
@@ -40,7 +44,6 @@ export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
                   alt={episode.title}
                   objectFit="cover"
                 />
-
                 <div className={styles.episodeDetails}>
                   <Link href={`/episodes/${episode.id}`}>
                     <a>{episode.title}</a>
@@ -49,7 +52,7 @@ export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
                   <span>{episode.publishedAt}</span>
                   <span>{episode.durationAsString}</span>
                 </div>
-                <button type="button">
+                <button type="button" onClick={() => play(episode)}>
                   <img src="/play-green.svg" alt="Tocar episódio" />
                 </button>
               </li>
@@ -57,9 +60,9 @@ export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
           })}
         </ul>
       </section>
+
       <section className={styles.allEpisodes}>
         <h2>Todos episódios</h2>
-
         <table cellSpacing={0}>
           <thead>
             <tr>
